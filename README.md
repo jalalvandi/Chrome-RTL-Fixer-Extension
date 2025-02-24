@@ -13,7 +13,7 @@ A powerful Chrome extension designed to fix Right-to-Left (RTL) and Left-to-Righ
 
 ## Installation
 1. **Clone or Download**:
-git clone https://github.com/yourusername/live-rtl-fixer-ultimate.git
+git clone https://github.com/jalalvandi/live-rtl-fixer-ultimate.git
 Or download the ZIP file and extract it.
 
 2. **Load in Chrome**:
