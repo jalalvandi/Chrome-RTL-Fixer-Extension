@@ -25,6 +25,8 @@ function fixTextDirection(element, mode) {
       element.style.direction = 'ltr';
       element.style.textAlign = 'left';
     }
+    chrome.storage.sync.set({ changesApplied: true });
+    chrome.runtime.sendMessage({ action: 'changesApplied' }); // Notify popup
   } else if (mode === 'manual') {
     element.dataset.rtlFixer = lang; // Store language for manual mode
   }
@@ -41,6 +43,8 @@ function applyManualFixes() {
     el.style.direction = 'ltr';
     el.style.textAlign = 'left';
   });
+  chrome.storage.sync.set({ changesApplied: true });
+  chrome.runtime.sendMessage({ action: 'changesApplied' }); // Notify popup
 }
 
 // Reset changes
@@ -52,6 +56,7 @@ function resetChanges() {
     el.style.unicodeBidi = ''; // Remove unicode-bidi
     delete el.dataset.rtlFixer; // Remove language tag
   });
+  chrome.storage.sync.set({ changesApplied: false });
 }
 
 // Initial text direction fix

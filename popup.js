@@ -10,13 +10,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const blacklistView = document.getElementById('blacklist-view');
 
   // Load initial settings
-  chrome.storage.sync.get(['enabled', 'mode', 'blacklist'], (data) => {
+  chrome.storage.sync.get(['enabled', 'mode', 'blacklist', 'changesApplied'], (data) => {
     const enabled = data.enabled !== false;
     const mode = data.mode || 'auto';
+    const changesApplied = data.changesApplied || false;
     statusText.textContent = `Status: ${enabled ? 'On' : 'Off'} | Mode: ${mode}`;
     toggleBtn.textContent = enabled ? 'Turn Off' : 'Turn On';
     modeSelect.value = mode;
     applyManualBtn.style.display = mode === 'manual' ? 'block' : 'none';
+    resetChangesBtn.style.display = changesApplied ? 'block' : 'none';
   });
 
   // Toggle enable/disable
@@ -35,9 +37,10 @@ document.addEventListener('DOMContentLoaded', () => {
   modeSelect.addEventListener('change', () => {
     const newMode = modeSelect.value;
     chrome.storage.sync.set({ mode: newMode });
-    chrome.storage.sync.get(['enabled'], (data) => {
+    chrome.storage.sync.get(['enabled', 'changesApplied'], (data) => {
       updateStatus(data.enabled !== false, newMode);
       applyManualBtn.style.display = newMode === 'manual' ? 'block' : 'none';
+      resetChangesBtn.style.display = data.changesApplied ? 'block' : 'none';
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         chrome.tabs.sendMessage(tabs[0].id, { action: 'mode', mode: newMode });
       });
@@ -48,6 +51,12 @@ document.addEventListener('DOMContentLoaded', () => {
   applyManualBtn.addEventListener('click', () => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       chrome.tabs.sendMessage(tabs[0].id, { action: 'applyManual' });
+      applyManualBtn.textContent = 'Fixed ✓';
+      chrome.storage.sync.set({ changesApplied: true }); // Set changes applied
+      resetChangesBtn.style.display = 'block'; // Show reset button immediately
+      setTimeout(() => {
+        applyManualBtn.textContent = 'Apply Fixes Now';
+      }, 2000); // Revert text after 2 seconds
     });
   });
 
@@ -55,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
   resetChangesBtn.addEventListener('click', () => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       chrome.tabs.sendMessage(tabs[0].id, { action: 'resetChanges' });
+      resetChangesBtn.style.display = 'none'; // Hide after reset
     });
   });
 
@@ -110,8 +120,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // Listen for messages from content script (optional fallback)
+  chrome.runtime.onMessage.addListener((message) => {
+    if (message.action === 'changesApplied') {
+      resetChangesBtn.style.display = 'block';
+    }
+  });
+
   function updateStatus(enabled, mode) {
-    statusText.textContent = `Status: ${enabled ? 'On' : 'Off'} | Mode: ${mode}`;
-    toggleBtn.textContent = enabled ? 'Turn Off' : 'Turn On';
+    chrome.storage.sync.get(['changesApplied'], (data) => {
+      const changesApplied = data.changesApplied || false;
+      statusText.textContent = `Status: ${enabled ? 'On' : 'Off'} | Mode: ${mode}`;
+      toggleBtn.textContent = enabled ? 'Turn Off' : 'Turn On';
+      resetChangesBtn.style.display = changesApplied ? 'block' : 'none';
+    });
   }
 });
