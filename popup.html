@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Live RTL Fixer</title>
+  <style>
+    body {
+      width: 250px;
+      padding: 15px;
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+    }
+    h3 {
+      margin: 0 0 10px;
+      color: #2c3e50;
+    }
+    button {
+      width: 100%;
+      padding: 8px;
+      margin: 5px 0;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover { background: #2980b9; }
+    #status { font-size: 14px; color: #7f8c8d; }
+    select { width: 100%; padding: 5px; margin: 5px 0; }
+    #blacklist-view { max-height: 150px; overflow-y: auto; margin-top: 10px; }
+    .blacklist-item { display: flex; justify-content: space-between; padding: 5px; }
+    .blacklist-item button { width: 60px; background: #e74c3c; }
+    .blacklist-item button:hover { background: #c0392b; }
+  </style>
+</head>
+<body>
+  <h3>Live RTL Fixer</h3>
+  <button id="toggle">Toggle On/Off</button>
+  <select id="mode">
+    <option value="auto">Auto Mode</option>
+    <option value="manual">Manual Mode</option>
+  </select>
+  <button id="blacklist">Add to Blacklist</button>
+  <button id="view-blacklist">View Blacklist</button>
+  <button id="report">Report Issue</button>
+  <p id="status">Status: On | Mode: Auto</p>
+  <div id="blacklist-view" style="display: none;"></div>
+  <script src="popup.js"></script>
+</body>
+</html>

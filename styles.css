@@ -1,0 +1,12 @@
+*[dir="rtl"] {
+  direction: rtl !important;
+  text-align: right !important;
+  word-break: break-word;
+  line-height: 1.5;
+}
+
+*[dir="ltr"] {
+  direction: ltr !important;
+  text-align: left !important;
+  word-break: normal;
+}

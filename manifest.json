@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Live RTL Fixer Ultimate",
+  "version": "1.2",
+  "description": "Ultimate RTL/LTR text fixer for Persian and more with live updates",
+  "permissions": ["activeTab", "storage"],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon16.png"
+    }
+  },
+  "icons": {
+    "16": "icon16.png"
+  }
+}
