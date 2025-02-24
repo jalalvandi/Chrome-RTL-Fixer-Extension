@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
   const toggleBtn = document.getElementById('toggle');
   const modeSelect = document.getElementById('mode');
+  const applyManualBtn = document.getElementById('apply-manual');
+  const resetChangesBtn = document.getElementById('reset-changes');
   const blacklistBtn = document.getElementById('blacklist');
   const viewBlacklistBtn = document.getElementById('view-blacklist');
   const reportBtn = document.getElementById('report');
@@ -14,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     statusText.textContent = `Status: ${enabled ? 'On' : 'Off'} | Mode: ${mode}`;
     toggleBtn.textContent = enabled ? 'Turn Off' : 'Turn On';
     modeSelect.value = mode;
+    applyManualBtn.style.display = mode === 'manual' ? 'block' : 'none';
   });
 
   // Toggle enable/disable
@@ -34,9 +37,24 @@ document.addEventListener('DOMContentLoaded', () => {
     chrome.storage.sync.set({ mode: newMode });
     chrome.storage.sync.get(['enabled'], (data) => {
       updateStatus(data.enabled !== false, newMode);
+      applyManualBtn.style.display = newMode === 'manual' ? 'block' : 'none';
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         chrome.tabs.sendMessage(tabs[0].id, { action: 'mode', mode: newMode });
       });
+    });
+  });
+
+  // Apply manual fixes
+  applyManualBtn.addEventListener('click', () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      chrome.tabs.sendMessage(tabs[0].id, { action: 'applyManual' });
+    });
+  });
+
+  // Reset changes
+  resetChangesBtn.addEventListener('click', () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      chrome.tabs.sendMessage(tabs[0].id, { action: 'resetChanges' });
     });
   });
 

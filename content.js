@@ -30,6 +30,30 @@ function fixTextDirection(element, mode) {
   }
 }
 
+// Apply manual fixes
+function applyManualFixes() {
+  document.querySelectorAll('[data-rtl-fixer="rtl"]').forEach(el => {
+    el.style.direction = 'rtl';
+    el.style.textAlign = 'right';
+    if (/[a-zA-Z]/.test(el.textContent)) el.style.unicodeBidi = 'embed';
+  });
+  document.querySelectorAll('[data-rtl-fixer="ltr"]').forEach(el => {
+    el.style.direction = 'ltr';
+    el.style.textAlign = 'left';
+  });
+}
+
+// Reset changes
+function resetChanges() {
+  const elements = document.querySelectorAll('p, div, span, h1, h2, h3, h4, h5, h6, li, td, th');
+  elements.forEach(el => {
+    el.style.direction = ''; // Remove direction
+    el.style.textAlign = ''; // Remove text alignment
+    el.style.unicodeBidi = ''; // Remove unicode-bidi
+    delete el.dataset.rtlFixer; // Remove language tag
+  });
+}
+
 // Initial text direction fix
 function initializeFix(mode) {
   chrome.storage.sync.get(['enabled', 'blacklist'], (data) => {
@@ -90,6 +114,10 @@ chrome.runtime.onMessage.addListener((message) => {
     } else if (message.action === 'mode') {
       initializeFix(message.mode);
       startObserver(message.mode);
+    } else if (message.action === 'applyManual' && currentMode === 'manual') {
+      applyManualFixes();
+    } else if (message.action === 'resetChanges') {
+      resetChanges();
     }
   });
 });
