@@ -1,6 +1,6 @@
 # Live RTL Fixer Ultimate
 
-A powerful Chrome extension designed to fix Right-to-Left (RTL) and Left-to-Right (LTR) text alignment issues in real-time, primarily for Persian users, with support for other RTL languages like Arabic. This tool ensures seamless text rendering on websites, especially when using browser translation tools (e.g., Google Translate), without requiring a page refresh.
+A Chrome extension designed to fix Right-to-Left (RTL) and Left-to-Right (LTR) text alignment issues in real-time, primarily for Persian users, with support for other RTL languages like Arabic. This tool ensures seamless text rendering on websites, especially when using browser translation tools (e.g., Google Translate), without requiring a page refresh.
 
 ## Features
 - **Real-Time Fixes**: Automatically adjusts text direction and alignment as content changes (e.g., during translation).
@@ -9,11 +9,10 @@ A powerful Chrome extension designed to fix Right-to-Left (RTL) and Left-to-Righ
 - **Blacklist Management**: Add or remove websites from a blacklist to exclude them from processing.
 - **User-Friendly Interface**: A sleek popup with toggle, mode selection, blacklist view, and issue reporting.
 - **Optimized Performance**: Lightweight and efficient, with minimal resource usage.
-- **Issue Reporting**: Send feedback directly to the developer for problematic sites.
 
 ## Installation
 1. **Clone or Download**:
-git clone https://github.com/jalalvandi/live-rtl-fixer-ultimate.git
+git clone https://github.com/jalalvandi/Chrome-RTL-Fixer-Extension
 Or download the ZIP file and extract it.
 
 2. **Load in Chrome**:

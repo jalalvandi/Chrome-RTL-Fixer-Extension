@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
   applyManualBtn.addEventListener('click', () => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       chrome.tabs.sendMessage(tabs[0].id, { action: 'applyManual' });
-      applyManualBtn.textContent = 'Fixed ✓';
+      applyManualBtn.textContent = 'Fixed';
       chrome.storage.sync.set({ changesApplied: true }); // Set changes applied
       resetChangesBtn.style.display = 'block'; // Show reset button immediately
       setTimeout(() => {
