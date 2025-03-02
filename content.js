@@ -1,4 +1,4 @@
-// Advanced language detection
+// Utility function for language detection
 function detectLanguage(text) {
   const rtlChars = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/g; // RTL languages like Persian, Arabic
   const latinChars = /[a-zA-Z]/g;
@@ -6,90 +6,93 @@ function detectLanguage(text) {
   const latinCount = (text.match(latinChars) || []).length;
   const total = rtlCount + latinCount;
 
-  if (total === 0) return 'unknown';
-  return rtlCount > latinCount * 0.2 ? 'rtl' : 'ltr'; // Adjusted threshold
+  return total === 0 ? 'unknown' : rtlCount > latinCount * 0.2 ? 'rtl' : 'ltr';
 }
 
-// Apply text direction
-function fixTextDirection(element, mode) {
+// Check if element is a code block
+function isCodeElement(element) {
+  const codeTags = ['CODE', 'PRE']; // Tags typically used for code
+  const codeClasses = ['code', 'highlight', 'hljs', 'prettyprint']; // Common code-related classes
+  return codeTags.includes(element.tagName) || 
+         codeClasses.some(cls => element.classList.contains(cls)) ||
+         element.closest('code, pre') !== null; // Check if inside a code/pre tag
+}
+
+// Apply text direction based on mode, excluding code blocks
+function applyTextDirection(element, mode) {
   const text = element.textContent.trim();
-  if (!text) return;
+  if (!text || isCodeElement(element)) return; // Skip if empty or a code block
 
   const lang = detectLanguage(text);
-  if (mode === 'auto') {
-    if (lang === 'rtl') {
-      element.style.direction = 'rtl';
-      element.style.textAlign = 'right';
-      if (/[a-zA-Z]/.test(text)) element.style.unicodeBidi = 'embed';
-    } else if (lang === 'ltr') {
-      element.style.direction = 'ltr';
-      element.style.textAlign = 'left';
+  if (mode === 'auto' && lang !== 'unknown') {
+    element.style.direction = lang === 'rtl' ? 'rtl' : 'ltr';
+    element.style.textAlign = lang === 'rtl' ? 'right' : 'left';
+    if (lang === 'rtl' && /[a-zA-Z]/.test(text)) {
+      element.style.unicodeBidi = 'embed';
     }
     chrome.storage.sync.set({ changesApplied: true });
-    chrome.runtime.sendMessage({ action: 'changesApplied' }); // Notify popup
+    chrome.runtime.sendMessage({ action: 'changesApplied' });
   } else if (mode === 'manual') {
-    element.dataset.rtlFixer = lang; // Store language for manual mode
+    element.dataset.rtlFixer = lang;
   }
 }
 
-// Apply manual fixes
+// Apply manual fixes to tagged elements, excluding code blocks
 function applyManualFixes() {
-  document.querySelectorAll('[data-rtl-fixer="rtl"]').forEach(el => {
-    el.style.direction = 'rtl';
-    el.style.textAlign = 'right';
-    if (/[a-zA-Z]/.test(el.textContent)) el.style.unicodeBidi = 'embed';
-  });
-  document.querySelectorAll('[data-rtl-fixer="ltr"]').forEach(el => {
-    el.style.direction = 'ltr';
-    el.style.textAlign = 'left';
+  const elements = document.querySelectorAll('[data-rtl-fixer]');
+  elements.forEach(el => {
+    if (isCodeElement(el)) return; // Skip code blocks
+    const lang = el.dataset.rtlFixer;
+    if (lang === 'rtl') {
+      el.style.direction = 'rtl';
+      el.style.textAlign = 'right';
+      if (/[a-zA-Z]/.test(el.textContent)) el.style.unicodeBidi = 'embed';
+    } else if (lang === 'ltr') {
+      el.style.direction = 'ltr';
+      el.style.textAlign = 'left';
+    }
   });
   chrome.storage.sync.set({ changesApplied: true });
-  chrome.runtime.sendMessage({ action: 'changesApplied' }); // Notify popup
+  chrome.runtime.sendMessage({ action: 'changesApplied' });
 }
 
-// Reset changes
+// Reset all applied changes
 function resetChanges() {
-  const elements = document.querySelectorAll('p, div, span, h1, h2, h3, h4, h5, h6, li, td, th');
+  const elements = document.querySelectorAll('[data-rtl-fixer], [style*="direction"]');
   elements.forEach(el => {
-    el.style.direction = ''; // Remove direction
-    el.style.textAlign = ''; // Remove text alignment
-    el.style.unicodeBidi = ''; // Remove unicode-bidi
-    delete el.dataset.rtlFixer; // Remove language tag
+    el.style.direction = '';
+    el.style.textAlign = '';
+    el.style.unicodeBidi = '';
+    delete el.dataset.rtlFixer;
   });
   chrome.storage.sync.set({ changesApplied: false });
 }
 
-// Initial text direction fix
+// Initialize text direction fixes
 function initializeFix(mode) {
   chrome.storage.sync.get(['enabled', 'blacklist'], (data) => {
-    const enabled = data.enabled !== false;
-    const blacklist = data.blacklist || [];
-    const hostname = window.location.hostname;
-    if (!enabled || blacklist.includes(hostname)) return;
-
+    if (!data.enabled || (data.blacklist && data.blacklist.includes(window.location.hostname))) return;
     const elements = document.querySelectorAll('p, div, span, h1, h2, h3, h4, h5, h6, li, td, th');
-    elements.forEach((el) => fixTextDirection(el, mode));
+    elements.forEach(el => applyTextDirection(el, mode));
   });
 }
 
-// Live monitoring with optimization
+// Optimized live monitoring
 let observer;
 function startObserver(mode) {
   if (observer) observer.disconnect();
+
   observer = new MutationObserver((mutations) => {
     chrome.storage.sync.get(['enabled', 'blacklist'], (data) => {
-      const enabled = data.enabled !== false;
-      const blacklist = data.blacklist || [];
-      const hostname = window.location.hostname;
-      if (!enabled || blacklist.includes(hostname)) return;
+      if (!data.enabled || (data.blacklist && data.blacklist.includes(window.location.hostname))) return;
 
-      mutations.forEach((mutation) => {
+      mutations.forEach(mutation => {
         if (mutation.type === 'childList' || mutation.type === 'characterData') {
           const target = mutation.target;
-          if (target.nodeType === Node.TEXT_NODE) {
-            fixTextDirection(target.parentElement, mode);
-          } else if (target.nodeType === Node.ELEMENT_NODE) {
-            fixTextDirection(target, mode);
+          if (target.nodeType === Node.TEXT_NODE && target.parentElement) {
+            applyTextDirection(target.parentElement, mode);
+          } else if (target.nodeType === Node.ELEMENT_NODE && target.textContent.trim()) {
+            applyTextDirection(target, mode);
           }
         }
       });
@@ -100,36 +103,56 @@ function startObserver(mode) {
     childList: true,
     subtree: true,
     characterData: true,
-    attributes: false // Optimize by disabling unnecessary checks
+    attributes: false
   });
 }
 
-// Handle messages from popup
-chrome.runtime.onMessage.addListener((message) => {
-  chrome.storage.sync.get(['mode'], (data) => {
+// Handle incoming messages from popup
+function handleMessages(message) {
+  chrome.storage.sync.get(['mode', 'enabled'], (data) => {
     const currentMode = data.mode || 'auto';
-    if (message.action === 'toggle') {
-      if (message.enabled) {
-        initializeFix(currentMode);
-        startObserver(currentMode);
-      } else if (observer) {
-        observer.disconnect();
-        observer = null;
+    const isEnabled = data.enabled !== false;
+    try {
+      switch (message.action) {
+        case 'toggle':
+          if (message.enabled && isEnabled) {
+            initializeFix(currentMode);
+            startObserver(currentMode);
+          } else if (observer) {
+            observer.disconnect();
+            observer = null;
+            resetChanges();
+          }
+          break;
+        case 'mode':
+          if (isEnabled) {
+            initializeFix(message.mode);
+            startObserver(message.mode);
+          }
+          break;
+        case 'applyManual':
+          if (currentMode === 'manual' && isEnabled) applyManualFixes();
+          break;
+        case 'resetChanges':
+          if (isEnabled) resetChanges();
+          break;
       }
-    } else if (message.action === 'mode') {
-      initializeFix(message.mode);
-      startObserver(message.mode);
-    } else if (message.action === 'applyManual' && currentMode === 'manual') {
-      applyManualFixes();
-    } else if (message.action === 'resetChanges') {
-      resetChanges();
+    } catch (error) {
+      console.error('Live RTL Fixer Error:', error);
     }
   });
-});
+}
 
-// Start the extension
-chrome.storage.sync.get(['mode'], (data) => {
-  const mode = data.mode || 'auto';
-  initializeFix(mode);
-  startObserver(mode);
-});
+// Main initialization
+(function init() {
+  chrome.storage.sync.get(['mode', 'enabled'], (data) => {
+    const mode = data.mode || 'auto';
+    const enabled = data.enabled !== false;
+    if (enabled) {
+      initializeFix(mode);
+      startObserver(mode);
+    }
+  });
+
+  chrome.runtime.onMessage.addListener(handleMessages);
+})();
