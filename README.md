@@ -1,4 +1,4 @@
-# Live RTL Fixer Ultimate
+# Live RTL Fixer
 
 A Chrome extension designed to fix Right-to-Left (RTL) and Left-to-Right (LTR) text alignment issues in real-time, primarily for Persian users, with support for other RTL languages like Arabic. This tool ensures seamless text rendering on websites, especially when using browser translation tools (e.g., Google Translate), without requiring a page refresh.
 
@@ -40,7 +40,7 @@ Or download the ZIP file and extract it.
 - styles.css: CSS overrides for RTL/LTR styling.
 - popup.html: Popup interface.
 - popup.js: Popup functionality and settings management.
-- icon16.png, icon48.png, icon128.png: Extension icons (replace with your own if desired).
+- icon.png,: Extension icons (replace with your own if desired).
 
 ## Development
 Want to contribute or customize? Here’s how:
